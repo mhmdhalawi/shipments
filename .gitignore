@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env/
+
+# Environment variables (keep secrets out of git!)
+.env
+.env.*
+!.env.example
+
+# FastAPI / Uvicorn
+*.log
+
+# Pytest / testing
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+site-packages/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo

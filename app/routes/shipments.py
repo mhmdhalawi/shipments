@@ -1,5 +1,6 @@
+from uuid import UUID
 from fastapi import APIRouter, HTTPException, status
-from models.shipment import Shipment, ShipmentCreate, ShipmentUpdate
+from models import Shipment, ShipmentCreate, ShipmentUpdate
 
 
 router = APIRouter(prefix="/shipments", tags=["shipments"])
@@ -10,9 +11,6 @@ shipments: list[Shipment] = []
 @router.get("/")
 async def get_shipments():
     return {"message": "List of shipments"}
-
-
-# document the status code for swagger
 
 
 @router.post(
@@ -28,7 +26,7 @@ async def create_shipment(shipment: ShipmentCreate) -> Shipment:
 
 
 @router.patch("/{shipment_id}")
-async def update_shipment(shipment_id: int, shipment: ShipmentUpdate) -> Shipment:
+async def update_shipment(shipment_id: UUID, shipment: ShipmentUpdate) -> Shipment:
 
     if shipment_id not in [s.id for s in shipments]:
         raise HTTPException(
@@ -51,7 +49,7 @@ async def update_shipment(shipment_id: int, shipment: ShipmentUpdate) -> Shipmen
 
 
 @router.delete("/{shipment_id}")
-async def delete_shipment(shipment_id: int):
+async def delete_shipment(shipment_id: UUID):
 
     if shipment_id not in [s.id for s in shipments]:
         raise HTTPException(
@@ -64,7 +62,7 @@ async def delete_shipment(shipment_id: int):
 
 
 @router.get("/{shipment_id}")
-async def get_shipment(shipment_id: int):
+async def get_shipment(shipment_id: UUID):
 
     if not shipment_id:
         raise HTTPException(

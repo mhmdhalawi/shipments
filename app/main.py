@@ -1,8 +1,29 @@
 from fastapi import FastAPI
-from routes import shipments
+from database import init_db
+from routes import shipments_router
+from contextlib import asynccontextmanager
+from rich import print as rprint
+from rich import panel
 
-app = FastAPI()
-app.include_router(shipments.router)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    rprint(
+        panel.Panel(
+            "Starting up...", border_style="green", title="Hello", title_align="left"
+        )
+    )
+    await init_db()  # runs on startup, creates tables
+    yield  # app runs here
+    rprint(
+        panel.Panel(
+            "Shutting down...", border_style="red", title="Goodbye", title_align="left"
+        )
+    )  # anything after yield runs on shutdown
+
+
+app = FastAPI(lifespan=lifespan)
+app.include_router(shipments_router)
 
 
 @app.get("/")

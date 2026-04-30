@@ -1,9 +1,9 @@
-from typing import Optional
 from uuid import UUID
+from sqlalchemy import Column
 import uuid_utils as uuid
 from enum import Enum
 from random import randint
-from sqlmodel import SQLModel, Field
+from sqlmodel import DateTime, SQLModel, Field
 from datetime import datetime, timedelta
 
 
@@ -12,7 +12,7 @@ def random_number():
 
 
 def generate_uuid7():
-    return uuid.uuid7()
+    return UUID(str(uuid.uuid7()))
 
 
 def generate_delivery_date():
@@ -40,15 +40,16 @@ class BaseShipment(SQLModel):
 class Shipment(BaseShipment, table=True):
     __tablename__ = "shipments"  # type: ignore
 
-    id: Optional[UUID] = Field(
+    id: UUID = Field(
         default_factory=generate_uuid7,
         primary_key=True,
         description="Unique identifier for the shipment",
     )
     status: ShipmentStatus = ShipmentStatus.created
-    estimated_delivery: Optional[datetime] = Field(
+    estimated_delivery: datetime = Field(
         default_factory=generate_delivery_date,
         description="Estimated delivery date for the shipment",
+        sa_column=Column(DateTime(timezone=True)),
     )
 
 
@@ -60,7 +61,7 @@ class ShipmentUpdate(BaseShipment):
     status: ShipmentStatus = Field(
         default=ShipmentStatus.created, description="Status of the shipment"
     )
-    estimated_delivery: Optional[datetime] = Field(
-        default_factory=None,
+    estimated_delivery: datetime = Field(
+        default_factory=generate_delivery_date,
         description="Estimated delivery date for the shipment",
     )

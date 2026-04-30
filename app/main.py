@@ -8,17 +8,11 @@ from rich import panel
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    rprint(
-        panel.Panel(
-            "Starting up...", border_style="green", title="Hello", title_align="left"
-        )
-    )
+    rprint(panel.Panel("Starting up...", border_style="green"))
     await init_db()  # runs on startup, creates tables
     yield  # app runs here
     rprint(
-        panel.Panel(
-            "Shutting down...", border_style="red", title="Goodbye", title_align="left"
-        )
+        panel.Panel("Shutting down...", border_style="red")
     )  # anything after yield runs on shutdown
 
 

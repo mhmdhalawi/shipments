@@ -1,6 +1,9 @@
 from uuid import UUID
 from fastapi import APIRouter, HTTPException, status
+from sqlmodel import select
+from database import SessionDep
 from models import Shipment, ShipmentCreate, ShipmentUpdate
+from typing import Sequence
 
 
 router = APIRouter(prefix="/shipments", tags=["shipments"])
@@ -9,8 +12,9 @@ shipments: list[Shipment] = []
 
 
 @router.get("/")
-async def get_shipments():
-    return {"message": "List of shipments"}
+async def get_shipments(session: SessionDep) -> Sequence[Shipment]:
+    result = await session.exec(select(Shipment))
+    return result.all()
 
 
 @router.post(
@@ -20,53 +24,58 @@ async def get_shipments():
         status.HTTP_201_CREATED: {"description": "Shipment created successfully"}
     },
 )
-async def create_shipment(shipment: ShipmentCreate) -> Shipment:
-    shipments.append(Shipment(content=shipment.content, weight=shipment.weight))
-    return Shipment(content=shipment.content, weight=shipment.weight)
-
-
-@router.patch("/{shipment_id}")
-async def update_shipment(shipment_id: UUID, shipment: ShipmentUpdate) -> Shipment:
-
-    if shipment_id not in [s.id for s in shipments]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid shipment ID"
-        )
-
-    # loop in shipments and update the shipment with the given id
-    for s in shipments:
-        if s.id == shipment_id:
-            s.content = shipment.content
-            s.weight = shipment.weight
-            s.status = shipment.status
-
-    return Shipment(
-        id=shipment_id,
-        content=shipment.content,
-        weight=shipment.weight,
-        status=shipment.status,
-    )
-
-
-@router.delete("/{shipment_id}")
-async def delete_shipment(shipment_id: UUID):
-
-    if shipment_id not in [s.id for s in shipments]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid shipment ID"
-        )
-
-    shipments[:] = [s for s in shipments if s.id != shipment_id]
-
-    return {"message": f"Shipment {shipment_id} deleted successfully"}
+async def create_shipment(shipment: ShipmentCreate, session: SessionDep) -> Shipment:
+    db_shipment = Shipment(content=shipment.content, weight=shipment.weight)
+    session.add(db_shipment)
+    await session.commit()
+    return db_shipment
 
 
 @router.get("/{shipment_id}")
-async def get_shipment(shipment_id: UUID):
+async def get_shipment(shipment_id: UUID, session: SessionDep):
 
     if not shipment_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Shipment ID is required"
         )
 
-    return {"message": f"Details of shipment {shipment_id}"}
+    db_shipment = await session.get(Shipment, shipment_id)
+    if not db_shipment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Shipment not found"
+        )
+
+    return db_shipment
+
+
+@router.patch("/{shipment_id}")
+async def update_shipment(
+    shipment_id: UUID, shipment: ShipmentUpdate, session: SessionDep
+) -> Shipment:
+    db_shipment = await session.get(Shipment, shipment_id)
+    if not db_shipment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Shipment not found"
+        )
+
+    for key, value in shipment.model_dump(exclude_unset=True).items():
+        setattr(db_shipment, key, value)
+
+    session.add(db_shipment)
+    await session.commit()
+    return db_shipment
+
+
+@router.delete("/{shipment_id}")
+async def delete_shipment(shipment_id: UUID, session: SessionDep):
+
+    db_shipment = await session.get(Shipment, shipment_id)
+    if not db_shipment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Shipment not found"
+        )
+
+    await session.delete(db_shipment)
+    await session.commit()
+
+    return {"message": f"Shipment {shipment_id} deleted successfully"}

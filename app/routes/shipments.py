@@ -1,45 +1,30 @@
 from uuid import UUID
-from fastapi import APIRouter, HTTPException, status
-from sqlmodel import select
-from database import SessionDep
-from models import Shipment, ShipmentCreate, ShipmentUpdate
 from typing import Sequence
+from fastapi import APIRouter, HTTPException, status
+
+from models import Shipment, ShipmentCreate, ShipmentUpdate
+from services import ShipmentServiceDep
 
 
 router = APIRouter(prefix="/shipments", tags=["shipments"])
 
-shipments: list[Shipment] = []
-
 
 @router.get("/")
-async def get_shipments(session: SessionDep) -> Sequence[Shipment]:
-    result = await session.exec(select(Shipment))
-    return result.all()
+async def get_shipments(service: ShipmentServiceDep) -> Sequence[Shipment]:
+    return await service.get_all()
 
 
-@router.post(
-    "/",
-    status_code=status.HTTP_201_CREATED,
-    responses={
-        status.HTTP_201_CREATED: {"description": "Shipment created successfully"}
-    },
-)
-async def create_shipment(shipment: ShipmentCreate, session: SessionDep) -> Shipment:
-    db_shipment = Shipment(content=shipment.content, weight=shipment.weight)
-    session.add(db_shipment)
-    await session.commit()
-    return db_shipment
+@router.post("/", status_code=status.HTTP_201_CREATED)
+async def create_shipment(
+    shipment: ShipmentCreate, service: ShipmentServiceDep
+) -> Shipment:
+    return await service.create(shipment)
 
 
 @router.get("/{shipment_id}")
-async def get_shipment(shipment_id: UUID, session: SessionDep):
+async def get_shipment(shipment_id: UUID, service: ShipmentServiceDep) -> Shipment:
+    db_shipment = await service.get_by_id(shipment_id)
 
-    if not shipment_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Shipment ID is required"
-        )
-
-    db_shipment = await session.get(Shipment, shipment_id)
     if not db_shipment:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Shipment not found"
@@ -50,32 +35,25 @@ async def get_shipment(shipment_id: UUID, session: SessionDep):
 
 @router.patch("/{shipment_id}")
 async def update_shipment(
-    shipment_id: UUID, shipment: ShipmentUpdate, session: SessionDep
+    shipment_id: UUID, shipment: ShipmentUpdate, service: ShipmentServiceDep
 ) -> Shipment:
-    db_shipment = await session.get(Shipment, shipment_id)
+    db_shipment = await service.update(shipment_id, shipment)
+
     if not db_shipment:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Shipment not found"
         )
 
-    for key, value in shipment.model_dump(exclude_unset=True).items():
-        setattr(db_shipment, key, value)
-
-    session.add(db_shipment)
-    await session.commit()
     return db_shipment
 
 
 @router.delete("/{shipment_id}")
-async def delete_shipment(shipment_id: UUID, session: SessionDep):
+async def delete_shipment(shipment_id: UUID, service: ShipmentServiceDep):
+    db_shipment = await service.delete(shipment_id)
 
-    db_shipment = await session.get(Shipment, shipment_id)
     if not db_shipment:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Shipment not found"
         )
-
-    await session.delete(db_shipment)
-    await session.commit()
 
     return {"message": f"Shipment {shipment_id} deleted successfully"}

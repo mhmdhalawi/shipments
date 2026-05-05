@@ -4,6 +4,7 @@ from fastapi import Depends
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import Annotated, Sequence
+from models.shipment import ShipmentStatus
 from database import SessionDep
 from models import Shipment, ShipmentCreate, ShipmentUpdate
 
@@ -18,6 +19,12 @@ class ShipmentService:
 
     async def get_by_id(self, shipment_id: UUID) -> Shipment | None:
         return await self.session.get(Shipment, shipment_id)
+
+    async def get_by_status(self, status: ShipmentStatus) -> Sequence[Shipment]:
+        result = await self.session.exec(
+            select(Shipment).where(Shipment.status == status)
+        )
+        return result.all()
 
     async def create(self, shipment: ShipmentCreate) -> Shipment:
         db_shipment = Shipment(content=shipment.content, weight=shipment.weight)

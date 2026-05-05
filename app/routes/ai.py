@@ -1,14 +1,13 @@
-# routers/ai_router.py
-from uuid import UUID
-from fastapi import APIRouter, HTTPException
+# routers/ai.py
+from fastapi import APIRouter
 from pydantic import BaseModel
-from services import ShipmentServiceDep, AIServiceDep
+from services.ai_service import AIServiceDep
+from services import ShipmentServiceDep
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
 
 class ChatRequest(BaseModel):
-    shipment_id: UUID
     question: str
 
 
@@ -22,9 +21,15 @@ async def chat(
     ai: AIServiceDep,
     shipment_service: ShipmentServiceDep,
 ):
-    shipment = await shipment_service.get_by_id(body.shipment_id)
-    if not shipment:
-        raise HTTPException(status_code=404, detail="Shipment not found")
+    handlers = {
+        "get_all_shipments": lambda: shipment_service.get_all(),
+        "get_shipment_by_id": lambda shipment_id: shipment_service.get_by_id(
+            shipment_id
+        ),
+        "get_shipments_by_status": lambda status: shipment_service.get_by_status(
+            status
+        ),
+    }
 
-    answer = await ai.answer_about_shipment(shipment, body.question)
+    answer = await ai.chat(body.question, handlers)
     return ChatResponse(answer=answer)

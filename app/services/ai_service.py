@@ -7,7 +7,7 @@ from collections.abc import Callable, Awaitable
 from typing import Annotated
 from models import Shipment
 from config import settings
-from tools import TOOLS
+from tools import SHIPMENT
 
 _client: AsyncAnthropic | None = None  # private to this module
 
@@ -60,7 +60,7 @@ class AIService:
                 model="claude-opus-4-6",
                 max_tokens=1024,
                 system=SHIPMENT_SYSTEM_PROMPT,
-                tools=TOOLS,
+                tools=SHIPMENT,
                 messages=messages,
             )
 

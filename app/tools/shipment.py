@@ -1,7 +1,7 @@
 from models.shipment import ShipmentStatus
 
 
-TOOLS: list = [
+SHIPMENT: list = [
     {
         "name": "get_all_shipments",
         "description": "Retrieve all shipments from the database.",

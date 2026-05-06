@@ -5,9 +5,9 @@ from anthropic.types import MessageParam, TextBlock, ToolUseBlock
 from fastapi import Depends
 from collections.abc import Callable, Awaitable
 from typing import Annotated
-from models import Shipment, ShipmentStatus
+from models import Shipment
 from config import settings
-
+from tools import TOOLS
 
 _client: AsyncAnthropic | None = None  # private to this module
 
@@ -26,42 +26,6 @@ and answer questions about a specific shipment.
 Always be concise and factual. Do not make up data.
 """
 
-TOOLS: list = [
-    {
-        "name": "get_all_shipments",
-        "description": "Retrieve all shipments from the database.",
-        "input_schema": {"type": "object", "properties": {}, "required": []},
-    },
-    {
-        "name": "get_shipment_by_id",
-        "description": "Retrieve a single shipment by its ID.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "shipment_id": {
-                    "type": "string",
-                    "description": "The UUID of the shipment",
-                }
-            },
-            "required": ["shipment_id"],
-        },
-    },
-    {
-        "name": "get_shipments_by_status",
-        "description": "Retrieve all shipments with a specific status.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "string",
-                    "enum": [s.value for s in ShipmentStatus],
-                    "description": "The status to filter by",
-                }
-            },
-            "required": ["status"],
-        },
-    },
-]
 
 # type alias for the tool handler functions passed in from outside
 ToolHandler = Callable[..., Awaitable[list[Shipment] | Shipment | None]]

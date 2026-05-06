@@ -1,8 +1,9 @@
 # routers/ai.py
 from fastapi import APIRouter
 from pydantic import BaseModel
-from services.ai_service import AIServiceDep
-from services import ShipmentServiceDep
+from models.shipment import ShipmentCreate, ShipmentUpdate
+from services import AIServiceDep, ShipmentServiceDep
+from uuid import UUID
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -21,13 +22,23 @@ async def chat(
     ai: AIServiceDep,
     shipment_service: ShipmentServiceDep,
 ):
+
     handlers = {
         "get_all_shipments": lambda: shipment_service.get_all(),
         "get_shipment_by_id": lambda shipment_id: shipment_service.get_by_id(
-            shipment_id
+            UUID(shipment_id)
         ),
         "get_shipments_by_status": lambda status: shipment_service.get_by_status(
             status
+        ),
+        "create_shipment": lambda content, weight: shipment_service.create(
+            ShipmentCreate(content=content, weight=weight)
+        ),
+        "update_shipment": lambda shipment_id, **kwargs: shipment_service.update(
+            UUID(shipment_id), ShipmentUpdate(**kwargs)
+        ),
+        "delete_shipment": lambda shipment_id: shipment_service.delete(
+            UUID(shipment_id)
         ),
     }
 

@@ -12,15 +12,10 @@ from config import settings
 _client: AsyncAnthropic | None = None  # private to this module
 
 
+# initialize the Anthropic client at startup and store in module-level variable
 def init_anthropic_client() -> AsyncAnthropic:
     global _client
     _client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
-    return _client
-
-
-def get_anthropic_client() -> AsyncAnthropic:
-    if _client is None:
-        raise RuntimeError("Anthropic client not initialized")
     return _client
 
 
@@ -98,7 +93,7 @@ class AIService:
 
         while True:
             response = await self.client.messages.create(
-                model="claude-opus-4-5",
+                model="claude-opus-4-6",
                 max_tokens=1024,
                 system=SHIPMENT_SYSTEM_PROMPT,
                 tools=TOOLS,
@@ -135,6 +130,12 @@ class AIService:
 
 
 # --- DI setup ---
+def get_anthropic_client() -> AsyncAnthropic:
+    if _client is None:
+        raise RuntimeError("Anthropic client not initialized")
+    return _client
+
+
 def get_ai_service(
     client: Annotated[AsyncAnthropic, Depends(get_anthropic_client)],
 ) -> AIService:

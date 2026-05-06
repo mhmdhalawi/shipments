@@ -57,7 +57,10 @@ class ShipmentCreate(BaseShipment):
     pass
 
 
-class ShipmentUpdate(BaseShipment):
+class ShipmentUpdate(SQLModel):
+    content: str | None = Field(default=None, min_length=1, max_length=100)
+    weight: float | None = Field(default=None, gt=0, lt=25)
+    destination: int | None = None
     status: ShipmentStatus = Field(
         default=ShipmentStatus.created, description="Status of the shipment"
     )

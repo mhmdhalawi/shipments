@@ -8,7 +8,7 @@ def random_number():
     return randint(11000, 11999)
 
 
-def generate_uuid7():
+def generate_uuid7() -> UUID:
     return UUID(str(uuid.uuid7()))
 
 

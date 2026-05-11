@@ -1,7 +1,7 @@
 from enum import Enum
 
-from sqlmodel import SQLModel, Field
 from datetime import datetime
+from sqlmodel import SQLModel, Field
 from utils import generate_delivery_date, random_number
 
 

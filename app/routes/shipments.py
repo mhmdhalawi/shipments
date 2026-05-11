@@ -2,7 +2,8 @@ from uuid import UUID
 from typing import Sequence
 from fastapi import APIRouter, HTTPException, status
 
-from models import Shipment, ShipmentCreate, ShipmentUpdate
+from models import Shipment
+from validation import ShipmentCreate, ShipmentUpdate
 from services import ShipmentServiceDep
 
 

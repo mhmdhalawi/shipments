@@ -1,8 +1,8 @@
 # routers/ai.py
 from fastapi import APIRouter
 from pydantic import BaseModel
-from models.shipment import ShipmentCreate, ShipmentUpdate
 from services import AIServiceDep, ShipmentServiceDep
+from validation import ShipmentCreate, ShipmentUpdate
 from uuid import UUID
 
 router = APIRouter(prefix="/ai", tags=["ai"])

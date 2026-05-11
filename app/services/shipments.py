@@ -6,7 +6,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import Annotated, Sequence
 from models.shipment import ShipmentStatus
 from database import SessionDep
-from models import Shipment, ShipmentCreate, ShipmentUpdate
+from models import Shipment
+from validation import ShipmentCreate, ShipmentUpdate
 
 
 class ShipmentService:

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from config import settings
 
 # models
-from models import Shipment  # noqa: F401
+from models import Shipment, Seller  # noqa: F401
 
 
 engine = create_async_engine(settings.DATABASE_URL)

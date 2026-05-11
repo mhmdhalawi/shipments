@@ -18,5 +18,3 @@ class SellerResponse(BaseModel):
     id: UUID
     name: str
     email: EmailStr
-
-    model_config = {"from_attributes": True}

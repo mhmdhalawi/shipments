@@ -12,7 +12,7 @@ class SellerService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def register_seller(self, seller: SellerCreate) -> SellerResponse:
+    async def create(self, seller: SellerCreate) -> SellerResponse:
         existing = await self.session.exec(
             select(Seller).where(Seller.email == seller.email)
         )

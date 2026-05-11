@@ -9,5 +9,5 @@ router = APIRouter(prefix="/sellers", tags=["sellers"])
 
 @router.post("/register")
 async def register_seller(seller: SellerCreate, service: SellerDep):
-    await service.register_seller(seller)
+    await service.create(seller)
     return {"message": "Seller registered successfully"}

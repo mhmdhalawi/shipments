@@ -14,6 +14,17 @@ class SellerCreate(BaseModel):
     )
 
 
+class SellerLogin(BaseModel):
+    email: EmailStr = Field(
+        min_length=5,
+        max_length=100,
+    )
+    password: str = Field(
+        min_length=8,
+        max_length=128,
+    )
+
+
 class SellerResponse(BaseModel):
     id: UUID
     name: str

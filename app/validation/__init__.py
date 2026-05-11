@@ -5,7 +5,7 @@ from validation.shipment import (
     BaseShipment,
 )
 
-from validation.seller import SellerCreate, SellerResponse
+from validation.seller import SellerCreate, SellerLogin, SellerResponse
 
 __all__ = [
     "ShipmentStatus",
@@ -13,5 +13,6 @@ __all__ = [
     "ShipmentUpdate",
     "BaseShipment",
     "SellerCreate",
+    "SellerLogin",
     "SellerResponse",
 ]

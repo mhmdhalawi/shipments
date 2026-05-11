@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from database import SessionDep
-from validation import SellerCreate, SellerResponse
+from validation import SellerCreate
 from models import Seller
 
 
@@ -12,7 +12,7 @@ class SellerService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(self, seller: SellerCreate) -> SellerResponse:
+    async def create(self, seller: SellerCreate) -> Seller:
         existing = await self.session.exec(
             select(Seller).where(Seller.email == seller.email)
         )
@@ -30,7 +30,7 @@ class SellerService:
         )
         self.session.add(db_seller)
         await self.session.commit()
-        return SellerResponse.model_validate(db_seller)
+        return db_seller
 
 
 def get_seller_service(session: SessionDep) -> SellerService:

@@ -6,7 +6,7 @@ from fastapi import Depends
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from database import SessionDep
-from validation import SellerCreate, SellerLogin
+from validation import SellerCreate, SellerLogin, SellerResponse
 from models import Seller
 from config import settings
 
@@ -51,7 +51,10 @@ class SellerService:
         token = self._create_access_token(
             {"sub": str(seller.id), "email": seller.email}
         )
-        return {"access_token": token, "token_type": "bearer"}
+        return {
+            "access_token": token,
+            "seller": SellerResponse.model_validate(seller),
+        }
 
     def _create_access_token(self, data: dict) -> str:
         payload = data.copy()

@@ -1,6 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, status
 
-from validation import SellerResponse
+from validation import SellerResponse, SellerLogin
 from services import SellerDep
 from validation import SellerCreate
 
@@ -8,7 +8,14 @@ from validation import SellerCreate
 router = APIRouter(prefix="/sellers", tags=["sellers"])
 
 
-@router.post("/register", response_model=SellerResponse)
+@router.post(
+    "/register", response_model=SellerResponse, status_code=status.HTTP_201_CREATED
+)
 async def register_seller(seller: SellerCreate, service: SellerDep):
     db_seller = await service.create(seller)
     return db_seller
+
+
+@router.post("/login")
+async def login_seller(credentials: SellerLogin, service: SellerDep):
+    return await service.login(credentials)

@@ -1,13 +1,15 @@
 from uuid import UUID
 from typing import Sequence
-from fastapi import APIRouter, HTTPException, status
-
+from fastapi import APIRouter, Depends, HTTPException, status
 from models import Shipment
+from services import get_current_seller
 from validation import ShipmentCreate, ShipmentUpdate
 from services import ShipmentServiceDep
 
 
-router = APIRouter(prefix="/shipments", tags=["shipments"])
+router = APIRouter(
+    prefix="/shipments", tags=["shipments"], dependencies=[Depends(get_current_seller)]
+)
 
 
 @router.get("/")

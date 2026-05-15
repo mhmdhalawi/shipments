@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from validation import SellerResponse
-from services import SellerDep, CurrentSellerDep
+from services import SellerDep, CurrentSellerDep, Token
 from validation import SellerCreate
 
 
@@ -29,3 +29,14 @@ async def login_seller(
 @router.get("/me")
 async def get_current_seller(seller: CurrentSellerDep):
     return seller
+
+
+@router.post("/logout")
+async def logout_seller(token: Token, service: SellerDep):
+    await service.logout(token)
+    return {"message": "Logged out successfully"}
+
+
+@router.post("/refresh")
+async def refresh_token(token: Token, service: SellerDep):
+    return await service.refresh(token)

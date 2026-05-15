@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str
     ENVIRONMENT: str
     SECRET_KEY: str
+    REFRESH_SECRET_KEY: str
+    REDIS_URL: str
 
     model_config = SettingsConfigDict(
         env_file=".env", env_ignore_empty=True, extra="ignore"

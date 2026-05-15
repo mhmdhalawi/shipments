@@ -1,6 +1,6 @@
 from services.shipments import ShipmentServiceDep
 from services.ai_service import AIServiceDep, init_anthropic_client
-from services.seller import SellerDep, CurrentSellerDep, get_current_seller
+from services.seller import SellerDep, CurrentSellerDep, get_current_seller, Token
 
 __all__ = [
     "ShipmentServiceDep",
@@ -9,4 +9,5 @@ __all__ = [
     "SellerDep",
     "CurrentSellerDep",
     "get_current_seller",
+    "Token",
 ]

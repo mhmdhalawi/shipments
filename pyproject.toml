@@ -2,3 +2,4 @@
 pythonVersion = "3.14"
 executionEnvironments = [{ root = "app" }]
 autoImportCompletions = true
+extraPaths = ["./app"]

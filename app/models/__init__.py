@@ -1,9 +1,9 @@
 # models/__init__.py
-from models.shipment import Shipment
-from models.seller import Seller
+from .seller import Seller
+from .shipment import Shipment
 
 
 __all__ = [
-    "Shipment",
     "Seller",
+    "Shipment",
 ]

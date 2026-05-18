@@ -1,11 +1,18 @@
 # routers/ai.py
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from services import AIServiceDep, ShipmentServiceDep
+from services import (
+    AIServiceDep,
+    ShipmentServiceDep,
+    get_current_seller,
+    CurrentSellerDep,
+)
 from validation import ShipmentCreate, ShipmentUpdate
 from uuid import UUID
 
-router = APIRouter(prefix="/ai", tags=["ai"])
+router = APIRouter(
+    prefix="/ai", tags=["ai"], dependencies=[Depends(get_current_seller)]
+)
 
 
 class ChatRequest(BaseModel):
@@ -21,24 +28,29 @@ async def chat(
     body: ChatRequest,
     ai: AIServiceDep,
     shipment_service: ShipmentServiceDep,
+    seller: CurrentSellerDep,
 ):
 
     handlers = {
-        "get_all_shipments": lambda: shipment_service.get_all(),
+        "get_all_shipments": lambda: shipment_service.get_all(seller.id),
         "get_shipment_by_id": lambda shipment_id: shipment_service.get_by_id(
-            UUID(shipment_id)
+            UUID(shipment_id),
+            seller.id,
         ),
         "get_shipments_by_status": lambda status: shipment_service.get_by_status(
-            status
+            status, seller.id
         ),
         "create_shipment": lambda content, weight: shipment_service.create(
-            ShipmentCreate(content=content, weight=weight)
+            ShipmentCreate(content=content, weight=weight), seller.id
         ),
         "update_shipment": lambda shipment_id, **kwargs: shipment_service.update(
-            UUID(shipment_id), ShipmentUpdate(**kwargs)
+            UUID(shipment_id),
+            ShipmentUpdate(**kwargs),
+            seller.id,
         ),
         "delete_shipment": lambda shipment_id: shipment_service.delete(
-            UUID(shipment_id)
+            UUID(shipment_id),
+            seller.id,
         ),
     }
 

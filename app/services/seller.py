@@ -11,7 +11,7 @@ from fastapi import Depends, HTTPException, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from database import SessionDep
-from validation import SellerCreate, SellerResponse
+from validation import SellerCreate
 from models import Seller
 from config import settings
 
@@ -50,7 +50,7 @@ class SellerService:
             "access_token": self._create_access_token(data),
             "refresh_token": self._create_refresh_token(data),
             "token_type": "bearer",
-            "seller": SellerResponse.model_validate(seller),
+            "seller": seller,
         }
 
     async def create(self, seller: SellerCreate) -> dict:

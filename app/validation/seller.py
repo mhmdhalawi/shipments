@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr, Field
-from uuid import UUID
 
 
 class SellerCreate(BaseModel):
@@ -12,11 +11,3 @@ class SellerCreate(BaseModel):
         min_length=8,
         max_length=128,
     )
-
-
-class SellerResponse(BaseModel):
-    id: UUID
-    name: str
-    email: EmailStr
-
-    model_config = {"from_attributes": True}

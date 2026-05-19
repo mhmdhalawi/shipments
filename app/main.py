@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from database import init_db
 from routes import shipments_router, ai_router, seller_router
 from contextlib import asynccontextmanager
 from rich import print as rprint
@@ -10,9 +9,8 @@ from services import init_anthropic_client
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     rprint(panel.Panel("Starting up...", border_style="green"))
-    anthropic_client = init_anthropic_client()  # initialize Anthropic client on startup
-    await init_db()  # runs on startup, creates tables
-    yield  # app runs here
+    anthropic_client = init_anthropic_client()
+    yield
     await anthropic_client.close()  # clean shutdown
     rprint(
         panel.Panel("Shutting down...", border_style="red")

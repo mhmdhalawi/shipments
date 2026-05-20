@@ -1,8 +1,14 @@
+from datetime import datetime, timezone
+from sqlalchemy import Column, DateTime
 from sqlmodel import SQLModel, Field
 from pydantic import EmailStr
 
 
 class User(SQLModel):
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
     name: str = Field(
         min_length=2,
         max_length=100,

@@ -2,7 +2,7 @@ from enum import Enum
 
 from datetime import datetime
 from sqlmodel import SQLModel, Field
-from utils import generate_delivery_date, random_number
+from utils import generate_delivery_date
 
 
 class ShipmentStatus(str, Enum):
@@ -18,9 +18,7 @@ class BaseShipment(SQLModel):
         description="Content description of the shipment",
     )
     weight: float = Field(gt=0, lt=25, description="Weight must be between 0 and 25 kg")
-    destination: int = Field(
-        default_factory=random_number, description="Destination code for the shipment"
-    )
+    destination: str = Field(description="Destination as WKT point, e.g. 'POINT(lng lat)'")
 
 
 class ShipmentCreate(BaseShipment):
@@ -30,7 +28,7 @@ class ShipmentCreate(BaseShipment):
 class ShipmentUpdate(SQLModel):
     content: str | None = Field(default=None, min_length=1, max_length=100)
     weight: float | None = Field(default=None, gt=0, lt=25)
-    destination: int | None = None
+    destination: str | None = None
     status: ShipmentStatus = Field(
         default=ShipmentStatus.created, description="Status of the shipment"
     )

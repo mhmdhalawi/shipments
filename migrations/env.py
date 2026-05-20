@@ -31,10 +31,6 @@ target_metadata = SQLModel.metadata
 
 POSTGIS_TABLES = {
     "spatial_ref_sys",
-    "geometry_columns",
-    "geography_columns",
-    "raster_columns",
-    "raster_overviews",
 }
 
 

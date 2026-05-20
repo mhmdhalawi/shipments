@@ -6,6 +6,10 @@ from validation.shipment import (
 )
 
 from validation.seller import SellerCreate
+from validation.delivery_partner import (
+    DeliveryPartnerCreate,
+    DeliveryPartnerLocationCreate,
+)
 
 __all__ = [
     "ShipmentStatus",
@@ -13,4 +17,6 @@ __all__ = [
     "ShipmentUpdate",
     "BaseShipment",
     "SellerCreate",
+    "DeliveryPartnerCreate",
+    "DeliveryPartnerLocationCreate",
 ]

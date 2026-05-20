@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from .user import User
 from uuid import UUID
 from utils import generate_uuid7
@@ -15,7 +15,7 @@ class DeliveryPartnerLocation(SQLModel, table=True):
     __tablename__ = "delivery_partner_locations"  # type: ignore
     id: UUID = Field(default_factory=generate_uuid7, primary_key=True)
     delivery_partner_id: UUID = Field(foreign_key="delivery_partners.id")
-    location: str = Field(
+    location: Any = Field(
         sa_column=Column(Geography(geometry_type="POINT", srid=4326), nullable=False)
     )
     label: str | None = Field(default=None, max_length=100)

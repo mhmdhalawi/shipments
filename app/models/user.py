@@ -1,10 +1,13 @@
+from uuid import UUID
 from datetime import datetime, timezone
 from sqlalchemy import Column, DateTime
 from sqlmodel import SQLModel, Field
 from pydantic import EmailStr
+from utils import generate_uuid7
 
 
 class User(SQLModel):
+    id: UUID = Field(default_factory=generate_uuid7)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime(timezone=True), nullable=False)

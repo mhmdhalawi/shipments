@@ -7,12 +7,13 @@ from typing import Annotated, Sequence
 from models.shipment import ShipmentStatus
 from database import SessionDep
 from models import Shipment
+from .base import BaseService
 from validation import ShipmentCreate, ShipmentUpdate
 
 
-class ShipmentService:
+class ShipmentService(BaseService):
     def __init__(self, session: AsyncSession):
-        self.session = session
+        super().__init__(Shipment, session)
 
     async def get_all(self, seller_id: UUID) -> Sequence[Shipment]:
         result = await self.session.exec(
@@ -40,10 +41,7 @@ class ShipmentService:
 
     async def create(self, shipment: ShipmentCreate, seller_id: UUID) -> Shipment:
         db_shipment = Shipment(**shipment.model_dump(), seller_id=seller_id)
-        self.session.add(db_shipment)
-        await self.session.commit()
-        await self.session.refresh(db_shipment)
-        return db_shipment
+        return await self._add(db_shipment)
 
     async def update(
         self, shipment_id: UUID, shipment: ShipmentUpdate, seller_id: UUID
@@ -53,18 +51,13 @@ class ShipmentService:
             return None
         for key, value in shipment.model_dump(exclude_unset=True).items():
             setattr(db_shipment, key, value)
-        self.session.add(db_shipment)
-        await self.session.commit()
-        await self.session.refresh(db_shipment)
-        return db_shipment
+        return await self._update(db_shipment)
 
     async def delete(self, shipment_id: UUID, seller_id: UUID) -> Shipment | None:
         db_shipment = await self.get_by_id(shipment_id, seller_id)
         if not db_shipment:
             return None
-        await self.session.delete(db_shipment)
-        await self.session.commit()
-        return db_shipment
+        return await self._delete(db_shipment)
 
 
 def get_shipment_service(session: SessionDep) -> ShipmentService:

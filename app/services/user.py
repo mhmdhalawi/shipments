@@ -4,6 +4,7 @@ import bcrypt
 from uuid import UUID
 from redis.asyncio import Redis
 from datetime import datetime, timedelta, timezone
+from typing import Any
 from fastapi import HTTPException, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -81,6 +82,37 @@ class UserService:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
             )
+
+    async def get_current_user(self, token: str) -> Any:
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            user_id = payload.get("sub")
+            jti = payload.get("jti")
+
+            if not user_id or not jti:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+                )
+
+            if await redis.exists(f"blacklist:{jti}"):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token has been revoked",
+                )
+
+        except jwt.InvalidTokenError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+            )
+
+        user = await self.session.get(self.model_class, UUID(user_id))
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"{self.model_class.__name__} not found",
+            )
+
+        return user
 
     async def refresh(self, refresh_token: str) -> dict:
         try:

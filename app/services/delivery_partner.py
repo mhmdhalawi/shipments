@@ -1,4 +1,3 @@
-import jwt
 from uuid import UUID
 from fastapi.security import OAuth2PasswordBearer
 from sqlite3 import IntegrityError
@@ -10,11 +9,12 @@ from shapely.geometry import Point
 from database import SessionDep
 from validation import DeliveryPartnerCreate, DeliveryPartnerLocationCreate
 from models import DeliveryPartner, DeliveryPartnerLocation
-from config import settings
-from services.user import UserService, redis
+from services.user import UserService
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/partner/login")
+
+Token = Annotated[str, Depends(oauth2_scheme)]
 
 
 class DeliveryPartnerService:
@@ -54,7 +54,9 @@ class DeliveryPartnerService:
     async def add_location(
         self, partner_id: UUID, location_data: DeliveryPartnerLocationCreate
     ) -> DeliveryPartnerLocation:
-        point = from_shape(Point(location_data.longitude, location_data.latitude), srid=4326)
+        point = from_shape(
+            Point(location_data.longitude, location_data.latitude), srid=4326
+        )
         db_location = DeliveryPartnerLocation(
             delivery_partner_id=partner_id,
             location=point,
@@ -82,46 +84,26 @@ class DeliveryPartnerService:
         await self.session.delete(location)
         await self.session.commit()
 
+    async def get_current_partner(self, token: str) -> DeliveryPartner:
+        return await self.auth.get_current_user(token)
+
 
 def get_delivery_partner_service(session: SessionDep) -> DeliveryPartnerService:
     return DeliveryPartnerService(session)
 
 
+DeliveryPartnerDep = Annotated[
+    DeliveryPartnerService, Depends(get_delivery_partner_service)
+]
+
+
 async def get_current_delivery_partner(
-    token: Annotated[str, Depends(oauth2_scheme)], session: SessionDep
+    token: Token,
+    service: DeliveryPartnerDep,
 ) -> DeliveryPartner:
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        partner_id = payload.get("sub")
-        jti = payload.get("jti")
-
-        if not partner_id or not jti:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-            )
-
-        if await redis.exists(f"blacklist:{jti}"):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has been revoked",
-            )
-
-    except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-        )
-
-    partner = await session.get(DeliveryPartner, UUID(partner_id))
-    if not partner:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Delivery partner not found",
-        )
-
-    return partner
+    return await service.get_current_partner(token)
 
 
-Token = Annotated[str, Depends(oauth2_scheme)]
-
-DeliveryPartnerDep = Annotated[DeliveryPartnerService, Depends(get_delivery_partner_service)]
-CurrentDeliveryPartnerDep = Annotated[DeliveryPartner, Depends(get_current_delivery_partner)]
+CurrentDeliveryPartnerDep = Annotated[
+    DeliveryPartner, Depends(get_current_delivery_partner)
+]

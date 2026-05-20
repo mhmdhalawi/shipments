@@ -1,5 +1,3 @@
-import jwt
-from uuid import UUID
 from fastapi.security import OAuth2PasswordBearer
 from sqlite3 import IntegrityError
 from typing import Annotated
@@ -7,11 +5,12 @@ from fastapi import Depends, HTTPException, status
 from database import SessionDep
 from validation import SellerCreate
 from models import Seller
-from config import settings
-from services.user import UserService, redis
+from services.user import UserService
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/sellers/login")
+
+Token = Annotated[str, Depends(oauth2_scheme)]
 
 
 class SellerService:
@@ -46,46 +45,22 @@ class SellerService:
     async def refresh(self, refresh_token: str) -> dict:
         return await self.auth.refresh(refresh_token)
 
+    async def get_current_seller(self, token: str) -> Seller:
+        return await self.auth.get_current_user(token)
+
 
 def get_seller_service(session: SessionDep) -> SellerService:
     return SellerService(session)
 
 
+SellerDep = Annotated[SellerService, Depends(get_seller_service)]
+
+
 async def get_current_seller(
-    token: Annotated[str, Depends(oauth2_scheme)], session: SessionDep
+    token: Token,
+    service: SellerDep,
 ) -> Seller:
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        seller_id = payload.get("sub")
-        jti = payload.get("jti")
+    return await service.get_current_seller(token)
 
-        if not seller_id or not jti:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-            )
-
-        if await redis.exists(f"blacklist:{jti}"):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has been revoked",
-            )
-
-    except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-        )
-
-    seller = await session.get(Seller, UUID(seller_id))
-    if not seller:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Seller not found"
-        )
-
-    return seller
-
-
-Token = Annotated[str, Depends(oauth2_scheme)]
 
 CurrentSellerDep = Annotated[Seller, Depends(get_current_seller)]
-
-SellerDep = Annotated[SellerService, Depends(get_seller_service)]

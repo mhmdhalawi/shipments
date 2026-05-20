@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes import shipments_router, ai_router, seller_router
+from routes import shipments_router, ai_router, seller_router, delivery_partner_router
 from contextlib import asynccontextmanager
 from rich import print as rprint
 from rich import panel
@@ -21,6 +21,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(shipments_router)
 app.include_router(ai_router)
 app.include_router(seller_router)
+app.include_router(delivery_partner_router)
 
 
 @app.get("/")

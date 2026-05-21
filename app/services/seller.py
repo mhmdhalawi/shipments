@@ -1,7 +1,8 @@
 from fastapi.security import OAuth2PasswordBearer
-from sqlite3 import IntegrityError
+from sqlalchemy.exc import IntegrityError
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
+from sqlmodel.ext.asyncio.session import AsyncSession
 from database import SessionDep
 from validation import SellerCreate
 from models import Seller
@@ -13,8 +14,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/sellers/login")
 Token = Annotated[str, Depends(oauth2_scheme)]
 
 
-class SellerService(UserService):
-    def __init__(self, session):
+class SellerService(UserService[Seller]):
+    def __init__(self, session: AsyncSession):
         super().__init__(session, Seller, "seller")
 
     async def create(self, seller: SellerCreate) -> dict:

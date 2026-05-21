@@ -4,22 +4,25 @@ import bcrypt
 from uuid import UUID
 from redis.asyncio import Redis
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Generic, TypeVar
 from fastapi import HTTPException, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from models.user import User
 from config import settings
+from services.base import BaseService
 
 
 redis = Redis.from_url(settings.REDIS_URL, decode_responses=True)
 
+UserT = TypeVar("UserT", bound=User)
 
-class UserService:
+
+class UserService(BaseService[UserT], Generic[UserT]):
     def __init__(
-        self, session: AsyncSession, model_class: type[User], response_key: str
+        self, session: AsyncSession, model_class: type[UserT], response_key: str
     ):
-        self.session = session
+        super().__init__(model_class, session)
         self.model_class = model_class
         self.response_key = response_key
 
@@ -43,7 +46,7 @@ class UserService:
         payload["type"] = "refresh"
         return jwt.encode(payload, settings.REFRESH_SECRET_KEY, algorithm="HS256")
 
-    def build_token_response(self, user: User) -> dict:
+    def build_token_response(self, user: UserT) -> dict:
         data = {"sub": str(user.id), "email": user.email}
         return {
             "access_token": self.create_access_token(data),
@@ -52,7 +55,7 @@ class UserService:
             self.response_key: user,
         }
 
-    async def get_by_email(self, email: str) -> User | None:
+    async def get_by_email(self, email: str) -> UserT | None:
         result = await self.session.exec(
             select(self.model_class).where(self.model_class.email == email)
         )
@@ -85,7 +88,7 @@ class UserService:
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
             )
 
-    async def get_current_user(self, token: str) -> Any:
+    async def get_current_user(self, token: str) -> UserT:
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
             user_id = payload.get("sub")

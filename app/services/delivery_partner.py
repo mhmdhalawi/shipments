@@ -1,9 +1,10 @@
 from uuid import UUID
 from fastapi.security import OAuth2PasswordBearer
-from sqlite3 import IntegrityError
+from sqlalchemy.exc import IntegrityError
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 from database import SessionDep
@@ -12,8 +13,7 @@ from validation import (
     DeliveryPartnerLocationCreate,
     DeliveryPartnerOut,
 )
-from models import DeliveryPartner, DeliveryPartnerLocation, User
-from services.base import BaseService
+from models import DeliveryPartner, DeliveryPartnerLocation
 from services.user import UserService
 
 
@@ -22,10 +22,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/partners/login")
 Token = Annotated[str, Depends(oauth2_scheme)]
 
 
-class DeliveryPartnerService(BaseService, UserService):
-    def __init__(self, session):
-        BaseService.__init__(self, DeliveryPartner, session)
-        UserService.__init__(self, session, DeliveryPartner, "partner")
+class DeliveryPartnerService(UserService[DeliveryPartner]):
+    def __init__(self, session: AsyncSession):
+        super().__init__(session, DeliveryPartner, "partner")
 
     async def create(self, partner: DeliveryPartnerCreate) -> dict:
         db_partner = DeliveryPartner(
@@ -47,7 +46,7 @@ class DeliveryPartnerService(BaseService, UserService):
 
         return self.build_token_response(db_partner)
 
-    def build_token_response(self, user: User) -> dict:
+    def build_token_response(self, user: DeliveryPartner) -> dict:
         base = super().build_token_response(user)
         base["partner"] = DeliveryPartnerOut.model_validate(user)
         return base

@@ -9,6 +9,8 @@ from validation.seller import SellerCreate
 from validation.delivery_partner import (
     DeliveryPartnerCreate,
     DeliveryPartnerLocationCreate,
+    LocationOut,
+    DeliveryPartnerOut,
 )
 
 __all__ = [
@@ -19,4 +21,6 @@ __all__ = [
     "SellerCreate",
     "DeliveryPartnerCreate",
     "DeliveryPartnerLocationCreate",
+    "LocationOut",
+    "DeliveryPartnerOut",
 ]

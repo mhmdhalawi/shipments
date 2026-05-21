@@ -9,7 +9,12 @@ from services.delivery_partner import (
     CurrentDeliveryPartnerDep,
     Token,
 )
-from validation import DeliveryPartnerCreate, DeliveryPartnerLocationCreate
+from validation import (
+    DeliveryPartnerCreate,
+    DeliveryPartnerLocationCreate,
+    DeliveryPartnerOut,
+    LocationOut,
+)
 
 
 router = APIRouter(
@@ -33,7 +38,7 @@ async def login_partner(
 
 @router.get("/me")
 async def get_current_partner(partner: CurrentDeliveryPartnerDep):
-    return partner
+    return DeliveryPartnerOut.model_validate(partner)
 
 
 @router.post("/logout")
@@ -53,7 +58,8 @@ async def add_location(
     partner: CurrentDeliveryPartnerDep,
     service: DeliveryPartnerDep,
 ):
-    return await service.add_location(partner.id, location)
+    db_location = await service.add_location(partner.id, location)
+    return LocationOut.model_validate(db_location)
 
 
 @router.delete("/me/locations/{location_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -7,8 +7,12 @@ from sqlmodel import select
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 from database import SessionDep
-from validation import DeliveryPartnerCreate, DeliveryPartnerLocationCreate
-from models import DeliveryPartner, DeliveryPartnerLocation
+from validation import (
+    DeliveryPartnerCreate,
+    DeliveryPartnerLocationCreate,
+    DeliveryPartnerOut,
+)
+from models import DeliveryPartner, DeliveryPartnerLocation, User
 from services.base import BaseService
 from services.user import UserService
 
@@ -43,14 +47,10 @@ class DeliveryPartnerService(BaseService, UserService):
 
         return self.build_token_response(db_partner)
 
-    async def login(self, username: str, password: str) -> dict:
-        return await self.login(username, password)
-
-    async def logout(self, token: str):
-        return await self.logout(token)
-
-    async def refresh(self, refresh_token: str) -> dict:
-        return await self.refresh(refresh_token)
+    def build_token_response(self, user: User) -> dict:
+        base = super().build_token_response(user)
+        base["partner"] = DeliveryPartnerOut.model_validate(user)
+        return base
 
     async def add_location(
         self, partner_id: UUID, location_data: DeliveryPartnerLocationCreate
@@ -82,7 +82,16 @@ class DeliveryPartnerService(BaseService, UserService):
         await self._delete(location)
 
     async def get_current_partner(self, token: str) -> DeliveryPartner:
-        return await self.get_current_user(token)
+        user = await self.get_current_user(token)
+        result = await self.session.exec(
+            select(DeliveryPartner).where(DeliveryPartner.id == user.id)
+        )
+        partner = result.first()
+        if not partner:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Partner not found"
+            )
+        return partner
 
 
 def get_delivery_partner_service(session: SessionDep) -> DeliveryPartnerService:

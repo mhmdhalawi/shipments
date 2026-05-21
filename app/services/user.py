@@ -16,7 +16,9 @@ redis = Redis.from_url(settings.REDIS_URL, decode_responses=True)
 
 
 class UserService:
-    def __init__(self, session: AsyncSession, model_class: type[User], response_key: str):
+    def __init__(
+        self, session: AsyncSession, model_class: type[User], response_key: str
+    ):
         self.session = session
         self.model_class = model_class
         self.response_key = response_key

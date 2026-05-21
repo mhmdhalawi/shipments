@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Any
+
 from .user import User
 from uuid import UUID
 from utils import generate_uuid7

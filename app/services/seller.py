@@ -35,15 +35,6 @@ class SellerService(UserService):
 
         return self.build_token_response(db_seller)
 
-    async def login(self, username: str, password: str) -> dict:
-        return await self.login(username, password)
-
-    async def logout(self, token: str):
-        return await self.logout(token)
-
-    async def refresh(self, refresh_token: str) -> dict:
-        return await self.refresh(refresh_token)
-
     async def get_current_seller(self, token: str) -> Seller:
         return await self.get_current_user(token)
 

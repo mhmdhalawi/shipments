@@ -9,24 +9,25 @@ from shapely.geometry import Point
 from database import SessionDep
 from validation import DeliveryPartnerCreate, DeliveryPartnerLocationCreate
 from models import DeliveryPartner, DeliveryPartnerLocation
+from services.base import BaseService
 from services.user import UserService
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/partner/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/partners/login")
 
 Token = Annotated[str, Depends(oauth2_scheme)]
 
 
-class DeliveryPartnerService:
+class DeliveryPartnerService(BaseService, UserService):
     def __init__(self, session):
-        self.session = session
-        self.auth = UserService(session, DeliveryPartner, "partner")
+        BaseService.__init__(self, DeliveryPartner, session)
+        UserService.__init__(self, session, DeliveryPartner, "partner")
 
     async def create(self, partner: DeliveryPartnerCreate) -> dict:
         db_partner = DeliveryPartner(
             name=partner.name,
             email=partner.email,
-            password_hash=self.auth.hash_password(partner.password),
+            password_hash=self.hash_password(partner.password),
             service_radius_km=partner.service_radius_km,
             max_handling_capacity=partner.max_handling_capacity,
         )
@@ -40,16 +41,16 @@ class DeliveryPartnerService:
                 status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
             )
 
-        return self.auth.build_token_response(db_partner)
+        return self.build_token_response(db_partner)
 
     async def login(self, username: str, password: str) -> dict:
-        return await self.auth.login(username, password)
+        return await self.login(username, password)
 
     async def logout(self, token: str):
-        return await self.auth.logout(token)
+        return await self.logout(token)
 
     async def refresh(self, refresh_token: str) -> dict:
-        return await self.auth.refresh(refresh_token)
+        return await self.refresh(refresh_token)
 
     async def add_location(
         self, partner_id: UUID, location_data: DeliveryPartnerLocationCreate
@@ -62,10 +63,7 @@ class DeliveryPartnerService:
             location=point,
             label=location_data.label,
         )
-        self.session.add(db_location)
-        await self.session.commit()
-        await self.session.refresh(db_location)
-        return db_location
+        return await self._add(db_location)
 
     async def remove_location(self, partner_id: UUID, location_id: UUID):
         result = await self.session.exec(
@@ -81,11 +79,10 @@ class DeliveryPartnerService:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Location not found"
             )
 
-        await self.session.delete(location)
-        await self.session.commit()
+        await self._delete(location)
 
     async def get_current_partner(self, token: str) -> DeliveryPartner:
-        return await self.auth.get_current_user(token)
+        return await self.get_current_user(token)
 
 
 def get_delivery_partner_service(session: SessionDep) -> DeliveryPartnerService:

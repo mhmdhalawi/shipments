@@ -4,12 +4,16 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from services.delivery_partner import DeliveryPartnerDep, CurrentDeliveryPartnerDep, Token
+from services.delivery_partner import (
+    DeliveryPartnerDep,
+    CurrentDeliveryPartnerDep,
+    Token,
+)
 from validation import DeliveryPartnerCreate, DeliveryPartnerLocationCreate
 
 
 router = APIRouter(
-    prefix="/partner",
+    prefix="/partners",
     tags=["Delivery Partner"],
 )
 
@@ -21,7 +25,8 @@ async def register_partner(partner: DeliveryPartnerCreate, service: DeliveryPart
 
 @router.post("/login")
 async def login_partner(
-    credentials: Annotated[OAuth2PasswordRequestForm, Depends()], service: DeliveryPartnerDep
+    credentials: Annotated[OAuth2PasswordRequestForm, Depends()],
+    service: DeliveryPartnerDep,
 ):
     return await service.login(credentials.username, credentials.password)
 

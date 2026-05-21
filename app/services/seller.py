@@ -13,16 +13,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/sellers/login")
 Token = Annotated[str, Depends(oauth2_scheme)]
 
 
-class SellerService:
+class SellerService(UserService):
     def __init__(self, session):
-        self.session = session
-        self.auth = UserService(session, Seller, "seller")
+        super().__init__(session, Seller, "seller")
 
     async def create(self, seller: SellerCreate) -> dict:
         db_seller = Seller(
             name=seller.name,
             email=seller.email,
-            password_hash=self.auth.hash_password(seller.password),
+            password_hash=self.hash_password(seller.password),
         )
         self.session.add(db_seller)
 
@@ -34,19 +33,19 @@ class SellerService:
                 status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
             )
 
-        return self.auth.build_token_response(db_seller)
+        return self.build_token_response(db_seller)
 
     async def login(self, username: str, password: str) -> dict:
-        return await self.auth.login(username, password)
+        return await self.login(username, password)
 
     async def logout(self, token: str):
-        return await self.auth.logout(token)
+        return await self.logout(token)
 
     async def refresh(self, refresh_token: str) -> dict:
-        return await self.auth.refresh(refresh_token)
+        return await self.refresh(refresh_token)
 
     async def get_current_seller(self, token: str) -> Seller:
-        return await self.auth.get_current_user(token)
+        return await self.get_current_user(token)
 
 
 def get_seller_service(session: SessionDep) -> SellerService:

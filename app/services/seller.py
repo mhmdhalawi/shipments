@@ -19,11 +19,10 @@ class SellerService(UserService[Seller]):
         super().__init__(session, Seller, "seller")
 
     async def create(self, seller: SellerCreate) -> dict:
-        db_seller = Seller(
-            name=seller.name,
-            email=seller.email,
-            password_hash=self.hash_password(seller.password),
-        )
+        seller_data = seller.model_dump(exclude={"password"})
+        seller_data["password_hash"] = self.hash_password(seller.password)
+
+        db_seller = Seller.model_validate(seller_data)
         self.session.add(db_seller)
 
         try:

@@ -27,13 +27,10 @@ class DeliveryPartnerService(UserService[DeliveryPartner]):
         super().__init__(session, DeliveryPartner, "partner")
 
     async def create(self, partner: DeliveryPartnerCreate) -> dict:
-        db_partner = DeliveryPartner(
-            name=partner.name,
-            email=partner.email,
-            password_hash=self.hash_password(partner.password),
-            service_radius_km=partner.service_radius_km,
-            max_handling_capacity=partner.max_handling_capacity,
-        )
+        partner_data = partner.model_dump(exclude={"password"})
+        partner_data["password_hash"] = self.hash_password(partner.password)
+
+        db_partner = DeliveryPartner.model_validate(partner_data)
         self.session.add(db_partner)
 
         try:

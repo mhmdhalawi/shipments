@@ -1,11 +1,13 @@
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from .user import User
 from uuid import UUID
 from utils import generate_uuid7
 from sqlmodel import Field, Relationship, DateTime as SADateTime, SQLModel
+from sqlmodel._compat import SQLModelConfig
 from sqlalchemy import Column
 from geoalchemy2 import Geography
+from geoalchemy2.elements import WKBElement
 from datetime import datetime, timezone
 
 if TYPE_CHECKING:
@@ -13,10 +15,12 @@ if TYPE_CHECKING:
 
 
 class DeliveryPartnerLocation(SQLModel, table=True):
+    model_config: SQLModelConfig = SQLModelConfig(arbitrary_types_allowed=True)
+
     __tablename__ = "delivery_partner_locations"  # type: ignore
     id: UUID = Field(default_factory=generate_uuid7, primary_key=True)
     delivery_partner_id: UUID = Field(foreign_key="delivery_partners.id")
-    location: Any = Field(
+    location: WKBElement = Field(
         sa_column=Column(Geography(geometry_type="POINT", srid=4326), nullable=False)
     )
     label: str | None = Field(default=None, max_length=100)

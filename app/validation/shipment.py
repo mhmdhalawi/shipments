@@ -1,6 +1,10 @@
 from enum import Enum
 
 from datetime import datetime
+from uuid import UUID
+from geojson_pydantic import Point
+from pydantic import BaseModel, ConfigDict, field_validator
+from shapely import get_x, get_y, wkb
 from sqlmodel import SQLModel, Field
 
 
@@ -17,13 +21,12 @@ class BaseShipment(SQLModel):
         description="Content description of the shipment",
     )
     weight: float = Field(gt=0, lt=25, description="Weight must be between 0 and 25 kg")
-    destination: str = Field(
-        description="Destination as WKT point, e.g. 'POINT(lng lat)'"
-    )
 
 
 class ShipmentCreate(BaseShipment):
-    pass
+    destination: str = Field(
+        description="Destination as WKT point, e.g. 'POINT(lng lat)'"
+    )
 
 
 class ShipmentUpdate(SQLModel):
@@ -37,3 +40,25 @@ class ShipmentUpdate(SQLModel):
         default=None,
         description="Estimated delivery date for the shipment",
     )
+
+
+class ShipmentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    content: str
+    weight: float
+    destination: Point
+    status: ShipmentStatus
+    estimated_delivery: datetime
+    created_at: datetime
+    seller_id: UUID
+    delivery_partner_id: UUID | None
+
+    @field_validator("destination", mode="before")
+    @classmethod
+    def parse_destination(cls, v):
+        if hasattr(v, "data"):
+            geom = wkb.loads(bytes(v.data))
+            return {"type": "Point", "coordinates": [get_x(geom), get_y(geom)]}
+        return v

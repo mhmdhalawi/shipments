@@ -2,6 +2,7 @@ from validation.shipment import (
     ShipmentStatus,
     ShipmentCreate,
     ShipmentUpdate,
+    ShipmentOut,
     BaseShipment,
 )
 
@@ -17,6 +18,7 @@ __all__ = [
     "ShipmentStatus",
     "ShipmentCreate",
     "ShipmentUpdate",
+    "ShipmentOut",
     "BaseShipment",
     "SellerCreate",
     "DeliveryPartnerCreate",

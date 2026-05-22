@@ -8,6 +8,7 @@ from typing import Annotated
 from models import Shipment
 from config import settings
 from tools import SHIPMENT
+from validation import ShipmentOut
 
 _client: AsyncAnthropic | None = None  # private to this module
 
@@ -50,8 +51,13 @@ class AIService:
         if result is None:
             return json.dumps({"error": "Not found"})
         if isinstance(result, list):
-            return json.dumps([json.loads(s.model_dump_json()) for s in result])
-        return result.model_dump_json()
+            return json.dumps(
+                [
+                    json.loads(ShipmentOut.model_validate(shipment).model_dump_json())
+                    for shipment in result
+                ]
+            )
+        return ShipmentOut.model_validate(result).model_dump_json()
 
     async def chat(self, question: str, handlers: dict[str, ToolHandler]) -> str:
         """Agentic loop — Claude keeps calling tools until it has an answer."""

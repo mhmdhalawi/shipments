@@ -1,6 +1,10 @@
 # services/shipment_service.py
 from uuid import UUID
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
+from geoalchemy2.elements import WKBElement
+from geoalchemy2.shape import from_shape
+from shapely import wkt
+from shapely.geometry import Point
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import Annotated, Sequence
@@ -14,6 +18,23 @@ from validation import ShipmentCreate, ShipmentUpdate
 class ShipmentService(BaseService[Shipment]):
     def __init__(self, session: AsyncSession):
         super().__init__(Shipment, session)
+
+    def _parse_destination(self, destination: str) -> WKBElement:
+        try:
+            geometry = wkt.loads(destination)
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Destination must be a valid WKT point, e.g. 'POINT(lng lat)'",
+            )
+
+        if not isinstance(geometry, Point):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Destination must be a WKT point, e.g. 'POINT(lng lat)'",
+            )
+
+        return from_shape(geometry, srid=4326)
 
     async def get_all(self, seller_id: UUID) -> Sequence[Shipment]:
         result = await self.session.exec(
@@ -40,7 +61,11 @@ class ShipmentService(BaseService[Shipment]):
         return result.all()
 
     async def create(self, shipment: ShipmentCreate, seller_id: UUID) -> Shipment:
-        db_shipment = Shipment(**shipment.model_dump(), seller_id=seller_id)
+        shipment_data = shipment.model_dump()
+        shipment_data["destination"] = self._parse_destination(shipment.destination)
+        shipment_data["seller_id"] = seller_id
+
+        db_shipment = Shipment.model_validate(shipment_data)
         return await self._add(db_shipment)
 
     async def update(
@@ -49,7 +74,13 @@ class ShipmentService(BaseService[Shipment]):
         db_shipment = await self.get_by_id(shipment_id, seller_id)
         if not db_shipment:
             return None
-        for key, value in shipment.model_dump(exclude_unset=True).items():
+        shipment_data = shipment.model_dump(exclude_unset=True)
+        if "destination" in shipment_data and shipment_data["destination"] is not None:
+            shipment_data["destination"] = self._parse_destination(
+                shipment_data["destination"]
+            )
+
+        for key, value in shipment_data.items():
             setattr(db_shipment, key, value)
         return await self._update(db_shipment)
 

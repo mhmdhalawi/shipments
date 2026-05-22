@@ -3,7 +3,9 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 from sqlalchemy import Column, DateTime as SADateTime, ForeignKey
 from sqlmodel import DateTime, Field, Relationship
+from sqlmodel._compat import SQLModelConfig
 from geoalchemy2 import Geography
+from geoalchemy2.elements import WKBElement
 from datetime import datetime, timezone
 from utils import generate_uuid7, generate_delivery_date
 from validation import ShipmentStatus, BaseShipment
@@ -13,6 +15,8 @@ if TYPE_CHECKING:
 
 
 class Shipment(BaseShipment, table=True):
+    model_config: SQLModelConfig = SQLModelConfig(arbitrary_types_allowed=True)
+
     __tablename__ = "shipments"  # type: ignore
 
     id: UUID = Field(
@@ -30,7 +34,7 @@ class Shipment(BaseShipment, table=True):
         sa_column=Column(DateTime(timezone=True)),
     )
 
-    destination: str = Field(
+    destination: WKBElement = Field(
         sa_column=Column(Geography(geometry_type="POINT", srid=4326), nullable=True)
     )
 

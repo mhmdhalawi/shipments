@@ -3,28 +3,28 @@ from typing import Sequence
 from fastapi import APIRouter, HTTPException, status
 from models import Shipment
 from services import CurrentSellerDep
-from validation import ShipmentCreate, ShipmentUpdate
+from validation import ShipmentCreate, ShipmentOut, ShipmentUpdate
 from services import ShipmentServiceDep
 
 
 router = APIRouter(prefix="/shipments", tags=["shipments"])
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ShipmentOut)
 async def create_shipment(
     shipment: ShipmentCreate, service: ShipmentServiceDep, seller: CurrentSellerDep
 ) -> Shipment:
     return await service.create(shipment, seller.id)
 
 
-@router.get("/")
+@router.get("/", response_model=list[ShipmentOut])
 async def get_shipments(
     service: ShipmentServiceDep, seller: CurrentSellerDep
 ) -> Sequence[Shipment]:
     return await service.get_all(seller.id)
 
 
-@router.patch("/{shipment_id}")
+@router.patch("/{shipment_id}", response_model=ShipmentOut)
 async def update_shipment(
     shipment_id: UUID,
     shipment: ShipmentUpdate,

@@ -10,6 +10,7 @@ from services.delivery_partner import (
     Token,
 )
 from validation import (
+    DeliveryPartnerAuthResponse,
     DeliveryPartnerCreate,
     DeliveryPartnerLocationCreate,
     DeliveryPartnerOut,
@@ -23,12 +24,16 @@ router = APIRouter(
 )
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    status_code=status.HTTP_201_CREATED,
+    response_model=DeliveryPartnerAuthResponse,
+)
 async def register_partner(partner: DeliveryPartnerCreate, service: DeliveryPartnerDep):
     return await service.create(partner)
 
 
-@router.post("/login")
+@router.post("/login", response_model=DeliveryPartnerAuthResponse)
 async def login_partner(
     credentials: Annotated[OAuth2PasswordRequestForm, Depends()],
     service: DeliveryPartnerDep,
@@ -47,7 +52,7 @@ async def logout_partner(token: Token, service: DeliveryPartnerDep):
     return {"message": "Logged out successfully"}
 
 
-@router.post("/refresh")
+@router.post("/refresh", response_model=DeliveryPartnerAuthResponse)
 async def refresh_token(token: Token, service: DeliveryPartnerDep):
     return await service.refresh(token)
 

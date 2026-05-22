@@ -3,6 +3,7 @@ from datetime import datetime
 from geojson_pydantic import Point
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from shapely import wkb, get_x, get_y
+from validation.auth import TokenOut
 
 
 class DeliveryPartnerBase(BaseModel):
@@ -62,3 +63,7 @@ class DeliveryPartnerOut(BaseModel):
     max_handling_capacity: int | None
     created_at: datetime
     locations: list[LocationOut]
+
+
+class DeliveryPartnerAuthResponse(TokenOut):
+    partner: DeliveryPartnerOut

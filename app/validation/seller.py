@@ -2,6 +2,7 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 from pydantic import ConfigDict
+from validation.auth import TokenOut
 
 
 class SellerCreate(BaseModel):
@@ -23,3 +24,7 @@ class SellerOut(BaseModel):
     name: str
     email: EmailStr
     created_at: datetime
+
+
+class SellerAuthResponse(TokenOut):
+    seller: SellerOut

@@ -4,19 +4,23 @@ from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from services import SellerDep, CurrentSellerDep, Token
-from validation import SellerCreate, SellerOut
+from validation import SellerAuthResponse, SellerCreate, SellerOut
 
 
 router = APIRouter(prefix="/sellers", tags=["sellers"])
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    status_code=status.HTTP_201_CREATED,
+    response_model=SellerAuthResponse,
+)
 async def register_seller(seller: SellerCreate, service: SellerDep):
     db_seller = await service.create(seller)
     return db_seller
 
 
-@router.post("/login")
+@router.post("/login", response_model=SellerAuthResponse)
 async def login_seller(
     credentials: Annotated[OAuth2PasswordRequestForm, Depends()], service: SellerDep
 ):
@@ -34,6 +38,6 @@ async def logout_seller(token: Token, service: SellerDep):
     return {"message": "Logged out successfully"}
 
 
-@router.post("/refresh")
+@router.post("/refresh", response_model=SellerAuthResponse)
 async def refresh_token(token: Token, service: SellerDep):
     return await service.refresh(token)

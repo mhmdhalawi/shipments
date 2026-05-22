@@ -3,7 +3,6 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.exc import IntegrityError
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
-from redis.asyncio import Redis
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from geoalchemy2.shape import from_shape
@@ -15,7 +14,8 @@ from validation import (
     DeliveryPartnerOut,
 )
 from models import DeliveryPartner, DeliveryPartnerLocation
-from services.user import RedisDep, UserService
+from services.token import TokenService, TokenServiceDep
+from services.user import UserService
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/partners/login")
@@ -24,8 +24,8 @@ Token = Annotated[str, Depends(oauth2_scheme)]
 
 
 class DeliveryPartnerService(UserService[DeliveryPartner]):
-    def __init__(self, session: AsyncSession, redis: Redis):
-        super().__init__(session, redis, DeliveryPartner, "partner")
+    def __init__(self, session: AsyncSession, token_service: TokenService):
+        super().__init__(session, token_service, DeliveryPartner, "partner")
 
     async def create(self, partner: DeliveryPartnerCreate) -> dict:
         partner_data = partner.model_dump(exclude={"password"})
@@ -92,9 +92,9 @@ class DeliveryPartnerService(UserService[DeliveryPartner]):
 
 
 def get_delivery_partner_service(
-    session: SessionDep, redis: RedisDep
+    session: SessionDep, token_service: TokenServiceDep
 ) -> DeliveryPartnerService:
-    return DeliveryPartnerService(session, redis)
+    return DeliveryPartnerService(session, token_service)
 
 
 DeliveryPartnerDep = Annotated[

@@ -4,8 +4,9 @@ import bcrypt
 from uuid import UUID
 from redis.asyncio import Redis
 from datetime import datetime, timedelta, timezone
-from typing import Generic, TypeVar
-from fastapi import HTTPException, status
+from functools import lru_cache
+from typing import Annotated, Generic, TypeVar
+from fastapi import Depends, HTTPException, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from models.user import User
@@ -13,16 +14,31 @@ from config import settings
 from services.base import BaseService
 
 
-redis = Redis.from_url(settings.REDIS_URL, decode_responses=True)
-
 UserT = TypeVar("UserT", bound=User)
+
+
+@lru_cache
+def get_redis_client() -> Redis:
+    return Redis.from_url(settings.REDIS_URL, decode_responses=True)
+
+
+def get_redis() -> Redis:
+    return get_redis_client()
+
+
+RedisDep = Annotated[Redis, Depends(get_redis)]
 
 
 class UserService(BaseService[UserT], Generic[UserT]):
     def __init__(
-        self, session: AsyncSession, model_class: type[UserT], response_key: str
+        self,
+        session: AsyncSession,
+        redis: Redis,
+        model_class: type[UserT],
+        response_key: str,
     ):
         super().__init__(model_class, session)
+        self.redis = redis
         self.model_class = model_class
         self.response_key = response_key
 
@@ -81,7 +97,7 @@ class UserService(BaseService[UserT], Generic[UserT]):
             if jti and exp:
                 ttl = exp - int(datetime.now(timezone.utc).timestamp())
                 if ttl > 0:
-                    await redis.setex(f"blacklist:{jti}", ttl, "1")
+                    await self.redis.setex(f"blacklist:{jti}", ttl, "1")
 
         except jwt.InvalidTokenError:
             raise HTTPException(
@@ -99,7 +115,7 @@ class UserService(BaseService[UserT], Generic[UserT]):
                     status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
                 )
 
-            if await redis.exists(f"blacklist:{jti}"):
+            if await self.redis.exists(f"blacklist:{jti}"):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Token has been revoked",
@@ -137,7 +153,7 @@ class UserService(BaseService[UserT], Generic[UserT]):
                     status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
                 )
 
-            if await redis.exists(f"blacklist:{jti}"):
+            if await self.redis.exists(f"blacklist:{jti}"):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Token has been revoked",
@@ -159,6 +175,6 @@ class UserService(BaseService[UserT], Generic[UserT]):
         if exp is not None:
             ttl = exp - int(datetime.now(timezone.utc).timestamp())
             if ttl > 0:
-                await redis.setex(f"blacklist:{jti}", ttl, "1")
+                await self.redis.setex(f"blacklist:{jti}", ttl, "1")
 
         return self.build_token_response(user)

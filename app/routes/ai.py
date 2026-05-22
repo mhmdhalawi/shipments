@@ -1,20 +1,17 @@
 # routers/ai.py
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from pydantic import BaseModel
 from models import Seller
 from services import (
     AIServiceDep,
     ShipmentService,
     ShipmentServiceDep,
-    get_current_seller,
     CurrentSellerDep,
 )
 from validation import ShipmentCreate, ShipmentStatus, ShipmentUpdate
 from uuid import UUID
 
-router = APIRouter(
-    prefix="/ai", tags=["ai"], dependencies=[Depends(get_current_seller)]
-)
+router = APIRouter(prefix="/ai", tags=["ai"])
 
 
 class ChatRequest(BaseModel):

@@ -2,11 +2,12 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.exc import IntegrityError
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
+from redis.asyncio import Redis
 from sqlmodel.ext.asyncio.session import AsyncSession
 from database import SessionDep
 from validation import SellerCreate, SellerOut
 from models import Seller
-from services.user import UserService
+from services.user import RedisDep, UserService
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/sellers/login")
@@ -15,8 +16,8 @@ Token = Annotated[str, Depends(oauth2_scheme)]
 
 
 class SellerService(UserService[Seller]):
-    def __init__(self, session: AsyncSession):
-        super().__init__(session, Seller, "seller")
+    def __init__(self, session: AsyncSession, redis: Redis):
+        super().__init__(session, redis, Seller, "seller")
 
     async def create(self, seller: SellerCreate) -> dict:
         seller_data = seller.model_dump(exclude={"password"})
@@ -44,8 +45,8 @@ class SellerService(UserService[Seller]):
         return await self.get_current_user(token)
 
 
-def get_seller_service(session: SessionDep) -> SellerService:
-    return SellerService(session)
+def get_seller_service(session: SessionDep, redis: RedisDep) -> SellerService:
+    return SellerService(session, redis)
 
 
 SellerDep = Annotated[SellerService, Depends(get_seller_service)]

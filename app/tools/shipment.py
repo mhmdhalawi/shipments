@@ -38,7 +38,7 @@ SHIPMENT: list = [
     },
     {
         "name": "create_shipment",
-        "description": "Create a new shipment with given content and weight.",
+        "description": "Create a new shipment with given content, weight, and destination.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -50,8 +50,12 @@ SHIPMENT: list = [
                     "type": "number",
                     "description": "Weight of the shipment in kg",
                 },
+                "destination": {
+                    "type": "string",
+                    "description": "Destination as WKT point, e.g. 'POINT(lng lat)'",
+                },
             },
-            "required": ["content", "weight"],
+            "required": ["content", "weight", "destination"],
         },
     },
     {

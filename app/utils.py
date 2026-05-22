@@ -1,11 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 import uuid_utils as uuid
 from random import randint
-
-
-def random_number():
-    return randint(11000, 11999)
 
 
 def generate_uuid7() -> UUID:
@@ -13,4 +9,4 @@ def generate_uuid7() -> UUID:
 
 
 def generate_delivery_date():
-    return datetime.now() + timedelta(days=randint(1, 10))
+    return datetime.now(timezone.utc) + timedelta(days=randint(1, 10))

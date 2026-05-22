@@ -1,15 +1,13 @@
 from uuid import UUID
 from typing import Sequence
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from models import Shipment
-from services import get_current_seller, CurrentSellerDep
+from services import CurrentSellerDep
 from validation import ShipmentCreate, ShipmentUpdate
 from services import ShipmentServiceDep
 
 
-router = APIRouter(
-    prefix="/shipments", tags=["shipments"], dependencies=[Depends(get_current_seller)]
-)
+router = APIRouter(prefix="/shipments", tags=["shipments"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)

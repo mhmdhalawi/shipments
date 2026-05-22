@@ -26,6 +26,8 @@ and answer questions about a specific shipment.
 Always be concise and factual. Do not make up data.
 """
 
+MAX_TOOL_ROUNDS = 5
+
 
 # type alias for the tool handler functions passed in from outside
 ToolHandler = Callable[..., Awaitable[list[Shipment] | Shipment | None]]
@@ -55,7 +57,7 @@ class AIService:
         """Agentic loop — Claude keeps calling tools until it has an answer."""
         messages: list[MessageParam] = [{"role": "user", "content": question}]
 
-        while True:
+        for _ in range(MAX_TOOL_ROUNDS):
             response = await self.client.messages.create(
                 model="claude-opus-4-6",
                 max_tokens=1024,
@@ -91,6 +93,8 @@ class AIService:
 
                 # append tool results and let Claude continue
                 messages.append({"role": "user", "content": tool_results})
+
+        raise RuntimeError("AI tool loop exceeded maximum rounds")
 
 
 # --- DI setup ---

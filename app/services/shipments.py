@@ -11,7 +11,7 @@ from .base import BaseService
 from validation import ShipmentCreate, ShipmentUpdate
 
 
-class ShipmentService(BaseService):
+class ShipmentService(BaseService[Shipment]):
     def __init__(self, session: AsyncSession):
         super().__init__(Shipment, session)
 

@@ -40,8 +40,9 @@ async def chat(
         "get_shipments_by_status": lambda status: shipment_service.get_by_status(
             status, seller.id
         ),
-        "create_shipment": lambda content, weight: shipment_service.create(
-            ShipmentCreate(content=content, weight=weight), seller.id
+        "create_shipment": lambda content, weight, destination: shipment_service.create(
+            ShipmentCreate(content=content, weight=weight, destination=destination),
+            seller.id,
         ),
         "update_shipment": lambda shipment_id, **kwargs: shipment_service.update(
             UUID(shipment_id),

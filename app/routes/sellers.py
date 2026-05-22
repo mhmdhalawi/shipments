@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from services import SellerDep, CurrentSellerDep, Token
-from validation import SellerCreate
+from validation import SellerCreate, SellerOut
 
 
 router = APIRouter(prefix="/sellers", tags=["sellers"])
@@ -23,7 +23,7 @@ async def login_seller(
     return await service.login(credentials.username, credentials.password)
 
 
-@router.get("/me")
+@router.get("/me", response_model=SellerOut)
 async def get_current_seller(seller: CurrentSellerDep):
     return seller
 

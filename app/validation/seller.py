@@ -1,4 +1,7 @@
+from uuid import UUID
+from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
+from pydantic import ConfigDict
 
 
 class SellerCreate(BaseModel):
@@ -11,3 +14,12 @@ class SellerCreate(BaseModel):
         min_length=8,
         max_length=128,
     )
+
+
+class SellerOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    name: str
+    email: EmailStr
+    created_at: datetime

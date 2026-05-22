@@ -1,4 +1,4 @@
-from .shipments import ShipmentServiceDep
+from .shipments import ShipmentService, ShipmentServiceDep
 from .ai_service import AIServiceDep, init_anthropic_client
 from .seller import SellerDep, CurrentSellerDep, get_current_seller, Token
 from .delivery_partner import (
@@ -10,6 +10,7 @@ from .delivery_partner import DeliveryPartnerService
 
 __all__ = [
     "ShipmentServiceDep",
+    "ShipmentService",
     "AIServiceDep",
     "init_anthropic_client",
     "SellerDep",

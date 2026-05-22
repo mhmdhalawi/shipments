@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from database import SessionDep
-from validation import SellerCreate
+from validation import SellerCreate, SellerOut
 from models import Seller
 from services.user import UserService
 
@@ -34,6 +34,11 @@ class SellerService(UserService[Seller]):
             )
 
         return self.build_token_response(db_seller)
+
+    def build_token_response(self, user: Seller) -> dict:
+        base = super().build_token_response(user)
+        base["seller"] = SellerOut.model_validate(user)
+        return base
 
     async def get_current_seller(self, token: str) -> Seller:
         return await self.get_current_user(token)

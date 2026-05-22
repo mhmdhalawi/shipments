@@ -6,7 +6,7 @@ from validation.shipment import (
     BaseShipment,
 )
 
-from validation.seller import SellerCreate
+from validation.seller import SellerCreate, SellerOut
 from validation.delivery_partner import (
     DeliveryPartnerCreate,
     DeliveryPartnerLocationCreate,
@@ -21,6 +21,7 @@ __all__ = [
     "ShipmentOut",
     "BaseShipment",
     "SellerCreate",
+    "SellerOut",
     "DeliveryPartnerCreate",
     "DeliveryPartnerLocationCreate",
     "LocationOut",
